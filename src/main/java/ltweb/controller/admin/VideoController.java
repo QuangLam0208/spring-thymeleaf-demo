@@ -1,4 +1,4 @@
-package ltweb.controller;
+package ltweb.controller.admin;
 
 import java.util.List;
 import java.util.Optional;

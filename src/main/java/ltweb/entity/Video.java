@@ -26,7 +26,7 @@ public class Video implements Serializable{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	private int id;
+	private Integer id;
 	
 	@Column(name = "title", columnDefinition = "nvarchar(200) not null")
 	private String title;

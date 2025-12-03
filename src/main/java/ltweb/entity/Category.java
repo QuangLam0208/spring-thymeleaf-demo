@@ -30,7 +30,7 @@ public class Category implements Serializable {
 	@Id
 	@GeneratedValue (strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	private int id; // co the them cac validation o day
+	private Integer id;
 
 	@Column(name="name", columnDefinition = "NVARCHAR(255) not null")
 	private String name;
