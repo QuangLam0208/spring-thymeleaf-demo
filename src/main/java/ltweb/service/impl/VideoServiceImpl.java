@@ -25,42 +25,33 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public Video save(Video entity) {
-        // Kiểm tra > 0 nghĩa là đang Cập nhật (Edit)
         if (entity.getId() > 0) {
-            // SỬA LỖI Ở ĐÂY: findById trả về Video, không phải Optional<Video>
             Video oldVideo = findById(entity.getId());
 
-            // Kiểm tra khác null thay vì isPresent()
             if (oldVideo != null) { 
                 
-                // 1. Giữ lại Poster cũ nếu không upload ảnh mới
                 if (!StringUtils.hasText(entity.getPoster())) {
                     entity.setPoster(oldVideo.getPoster());
                 }
-
-                // 2. Giữ lại Title cũ nếu gửi lên rỗng
+                
                 if (!StringUtils.hasText(entity.getTitle())) {
                     entity.setTitle(oldVideo.getTitle());
                 }
 
-                // 3. Giữ lại Description cũ nếu gửi lên rỗng
                 if (!StringUtils.hasText(entity.getDescription())) {
                     entity.setDescription(oldVideo.getDescription());
                 }
                 
-                // 4. Giữ lại lượt xem cũ nếu giá trị mới là 0
                 if (entity.getViews() == 0) {
                      entity.setViews(oldVideo.getViews());
                 }
                 
-                // 5. Giữ lại Category cũ nếu không chọn mới
                 if (entity.getCategory() == null) {
                     entity.setCategory(oldVideo.getCategory());
                 }
             }
             return videoRepository.save(entity);
         } else {
-            // Trường hợp Thêm mới (Add)
             return videoRepository.save(entity);
         }
     }
@@ -77,7 +68,6 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public Video findById(Integer id) {
-        // Hàm này trả về Video hoặc null
         Optional<Video> video = videoRepository.findById(id);
         return video.orElse(null);
     }

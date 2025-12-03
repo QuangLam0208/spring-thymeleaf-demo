@@ -33,7 +33,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // 1. Hiển thị danh sách, tìm kiếm, phân trang
     @GetMapping("")
     public String list(Model model,
                        @RequestParam(name = "username", required = false) String username,
@@ -66,7 +65,6 @@ public class UserController {
         return "admin/users/list";
     }
 
-    // 2. Form thêm mới
     @GetMapping("add")
     public String add(Model model) {
         model.addAttribute("user", new User());
@@ -74,7 +72,6 @@ public class UserController {
         return "admin/users/addOrEdit";
     }
 
-    // 3. Form chỉnh sửa
     @GetMapping("edit/{id}")
     public String edit(Model model, @PathVariable("id") Integer userId) {
         Optional<User> opt = userService.findById(userId);
@@ -83,21 +80,16 @@ public class UserController {
             model.addAttribute("isEdit", true);
             return "admin/users/addOrEdit";
         }
-        // Dùng RedirectAttributes để báo lỗi nếu không tìm thấy (Tùy chọn)
         return "redirect:/admin/users";
     }
 
-    // 4. Lưu dữ liệu
     @PostMapping("save")
     public String save(Model model, 
                        @Valid @ModelAttribute("user") User user, 
                        BindingResult result, 
-                       RedirectAttributes redirectAttributes) { // Thêm RedirectAttributes
+                       RedirectAttributes redirectAttributes) {
         
-        // Kiểm tra lỗi Validation
         if (result.hasErrors()) {
-            // QUAN TRỌNG: Nếu có lỗi, phải gửi lại isEdit để View hiển thị đúng title
-            // Nếu user.getId() > 0 tức là đang Sửa, ngược lại là Thêm
             boolean isEdit = user.getId() != null && user.getId() > 0;
             model.addAttribute("isEdit", isEdit);
             return "admin/users/addOrEdit";
@@ -105,13 +97,11 @@ public class UserController {
         
         userService.save(user);
         
-        // Thông báo thành công
         redirectAttributes.addFlashAttribute("message", "Lưu người dùng thành công!");
         
         return "redirect:/admin/users";
     }
 
-    // 5. Xóa
     @GetMapping("delete/{id}")
     public String delete(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {

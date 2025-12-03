@@ -33,9 +33,8 @@ public class VideoController {
     private VideoService videoService;
 
     @Autowired
-    private CategoryService categoryService; // Bổ sung để lấy danh sách Category cho Dropdown
+    private CategoryService categoryService;
 
-    // --- PHẦN 1: LIST & SEARCH & PAGINATION (Code của bạn) ---
     @GetMapping("")
     public String list(Model model,
                        @RequestParam(name = "title", required = false) String title,
@@ -47,12 +46,10 @@ public class VideoController {
         Pageable pageable = PageRequest.of(currentPage - 1, pageSize);
 
         Page<Video> resultPage;
-        // Lưu ý: Đảm bảo VideoService interface đã có hàm findByTitleContaining(String, Pageable)
         if (StringUtils.hasText(title)) {
             resultPage = videoService.findByTitleContaining(title, pageable);
             model.addAttribute("keyword", title);
         } else {
-            // Lưu ý: Đảm bảo VideoService interface đã có hàm findAll(Pageable)
             resultPage = videoService.findAll(pageable);
         }
 
@@ -68,8 +65,6 @@ public class VideoController {
 
         return "admin/videos/list";
     }
-    
-    // --- PHẦN 2: CÁC CHỨC NĂNG CÒN THIẾU (ADD, EDIT, DELETE) ---
 
     @GetMapping("/add")
     public String add(Model model) {
@@ -101,9 +96,7 @@ public class VideoController {
         videoService.deleteById(id);
         return new ModelAndView("forward:/admin/videos");
     }
-    
-    // --- PHẦN 3: DATA CHO DROPDOWN CATEGORY ---
-    // Hàm này sẽ tự động thêm attribute "categories" vào Model cho TẤT CẢ các view trong Controller này
+
     @ModelAttribute("categories")
     public List<Category> getCategories() {
         return categoryService.findAll();

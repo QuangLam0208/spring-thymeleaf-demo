@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import ltweb.entity.Category;
+import ltweb.entity.User; // Import User
 import ltweb.service.CategoryService;
+import ltweb.service.UserService; // Import UserService
 
 @Controller
 @RequestMapping("/admin/categories")
@@ -30,6 +32,9 @@ public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("")
     public String list(Model model,
@@ -67,10 +72,7 @@ public class CategoryController {
     public String add(Model model) {
         Category category = new Category();
         model.addAttribute("category", category);
-        
-        // TRUYỀN BIẾN isEdit = false (Thêm mới)
         model.addAttribute("isEdit", false);
-        
         return "admin/categories/addOrEdit";
     }
 
@@ -81,10 +83,7 @@ public class CategoryController {
         if (opt.isPresent()) {
             Category category = opt.get();
             model.addAttribute("category", category);
-            
-            // TRUYỀN BIẾN isEdit = true (Cập nhật)
             model.addAttribute("isEdit", true);
-            
             return new ModelAndView("admin/categories/addOrEdit");
         }
         
@@ -101,5 +100,10 @@ public class CategoryController {
     public ModelAndView delete(Model model, @PathVariable("id") Integer id) {
         categoryService.deleteById(id);
         return new ModelAndView("forward:/admin/categories");
+    }
+    
+    @ModelAttribute("users")
+    public List<User> getUsers() {
+        return userService.findAll();
     }
 }
