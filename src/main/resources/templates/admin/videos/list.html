@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout-admin.html}"> <head>
+    <title>Danh sách Video</title>
+</head>
+
+<body>
+    <section layout:fragment="content">
+        <h2 class="mt-4">Quản lý Video</h2>
+        
+        <form th:action="@{/admin/videos}" method="get" class="row g-3 mb-4">
+            <div class="col-auto">
+                <input type="text" name="title" class="form-control" placeholder="Tìm theo tiêu đề..." th:value="${keyword}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mb-3">Tìm kiếm</button>
+            </div>
+        </form>
+        
+        <a th:href="@{/admin/videos/add}" class="btn btn-success mb-2">Thêm mới</a>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Poster</th>
+                    <th>Tiêu đề</th>
+                    <th>Danh mục</th> <th>Lượt xem</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="video : ${videoPage.content}">
+                    <td th:text="${video.id}"></td>
+                    <td>
+                        <img th:if="${video.poster != null}" th:src="@{'/images/' + ${video.poster}}" width="80" />
+                    </td>
+                    <td th:text="${video.title}"></td>
+                    <td th:text="${video.category.name}"></td> <td th:text="${video.views}"></td>
+                    <td>
+                        <span th:if="${video.active}" class="badge bg-success">Active</span>
+                        <span th:unless="${video.active}" class="badge bg-danger">Inactive</span>
+                    </td>
+                    <td>
+                        <a th:href="@{/admin/videos/edit/{id}(id=${video.id})}" class="btn btn-warning btn-sm">Sửa</a>
+                        <a th:href="@{/admin/videos/delete/{id}(id=${video.id})}" class="btn btn-danger btn-sm">Xóa</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <nav th:if="${videoPage.totalPages > 0}">
+            <ul class="pagination">
+                <li th:each="pageNumber : ${pageNumbers}" 
+                    class="page-item" 
+                    th:classappend="${pageNumber == videoPage.number + 1} ? 'active'">
+                    <a class="page-link" 
+                       th:href="@{/admin/videos(title=${keyword}, size=${videoPage.size}, page=${pageNumber})}"
+                       th:text="${pageNumber}"></a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+</body>
+</html>
