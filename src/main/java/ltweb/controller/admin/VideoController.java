@@ -131,9 +131,9 @@ public class VideoController {
     }
 
     @GetMapping("/delete/{id}")
-    public ModelAndView delete(Model model, @PathVariable("id") Integer id) {
+    public String delete(Model model, @PathVariable("id") Integer id) {
         videoService.deleteById(id);
-        return new ModelAndView("forward:/admin/videos");
+        return "redirect:/admin/videos";
     }
 
     @ModelAttribute("categories")
