@@ -1,40 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-	<nav th:fragment="header"
-		class="navbar navbar-expand-lg navbar-dark bg-dark">
-		<div class="container">
-			<a class="navbar-brand" href="#"> <img
-				th:src="@{/images/Admin.jpg}" class="rounded-circle me-2"
-				alt="Avatar" width="30" height="30" style="object-fit: cover;">
-				Admin
-			</a>
-			<button class="navbar-toggler" type="button"
-				data-bs-toggle="collapse" data-bs-target="#navbarNav">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav ms-auto">
-					<li class="nav-item"><a class="nav-link"
-						th:classappend="${#httpServletRequest.getRequestURI().contains('/categories') ? 'active fw-bold' : ''}"
-						th:href="@{/admin/categories}"> <i
-							class="fas fa-layer-group me-1"></i> Quản lý Danh mục
-					</a></li>
-
-					<li class="nav-item"><a class="nav-link"
-						th:classappend="${#httpServletRequest.getRequestURI().contains('/videos') ? 'active fw-bold' : ''}"
-						th:href="@{/admin/videos}"> <i class="fas fa-video me-1"></i>
-							Quản lý Video
-					</a></li>
-
-					<li class="nav-item"><a class="nav-link"
-						th:classappend="${#httpServletRequest.getRequestURI().contains('/users') ? 'active fw-bold' : ''}"
-						th:href="@{/admin/users}"> <i class="fas fa-users me-1"></i>
-							Quản lý User
-					</a></li>
-				</ul>
-			</div>
-		</div>
-	</nav>
+    <nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/home">
+                <img th:src="@{/images/Admin.jpg}" 
+                     class="rounded-circle border border-2 border-white me-2" 
+                     alt="Avatar" 
+                     width="35" height="35" 
+                     style="object-fit: cover;">
+                Admin System
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/categories}"
+                           th:classappend="${#httpServletRequest.getRequestURI().contains('/categories') ? 'active text-warning fw-bold' : ''}">
+                            <i class="fa-solid fa-list"></i> Danh mục
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/videos}"
+                           th:classappend="${#httpServletRequest.getRequestURI().contains('/videos') ? 'active text-warning fw-bold' : ''}">
+                            <i class="fa-solid fa-film"></i> Video
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/users}"
+                           th:classappend="${#httpServletRequest.getRequestURI().contains('/users') ? 'active text-warning fw-bold' : ''}">
+                            <i class="fa-solid fa-user-gear"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                         <a class="nav-link btn btn-outline-light btn-sm px-3 text-white" href="#">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                         </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </body>
 </html>
