@@ -1,7 +1,12 @@
 package ltweb.controller.admin;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,18 +18,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
 import ltweb.entity.Category;
-import ltweb.entity.User; // Import User
+import ltweb.entity.User;
 import ltweb.service.CategoryService;
-import ltweb.service.UserService; // Import UserService
+import ltweb.service.UserService;
+import ltweb.util.Constant;
 
 @Controller
 @RequestMapping("/admin/categories")
@@ -35,6 +43,11 @@ public class CategoryController {
 
     @Autowired
     private UserService userService;
+
+    @ModelAttribute("users")
+    public List<User> getUsers() {
+        return userService.findAll();
+    }
 
     @GetMapping("")
     public String list(Model model,
@@ -68,7 +81,7 @@ public class CategoryController {
         return "admin/categories/list";
     }
 
-    @GetMapping("/add")
+    @GetMapping("add")
     public String add(Model model) {
         Category category = new Category();
         model.addAttribute("category", category);
@@ -76,34 +89,82 @@ public class CategoryController {
         return "admin/categories/addOrEdit";
     }
 
-    @GetMapping("/edit/{id}")
-    public ModelAndView edit(Model model, @PathVariable("id") Integer id) {
+    @GetMapping("edit/{id}")
+    public String edit(Model model, @PathVariable("id") Integer id) {
         Optional<Category> opt = categoryService.findById(id);
         
         if (opt.isPresent()) {
             Category category = opt.get();
             model.addAttribute("category", category);
             model.addAttribute("isEdit", true);
-            return new ModelAndView("admin/categories/addOrEdit");
+            return "admin/categories/addOrEdit";
         }
         
-        return new ModelAndView("forward:/admin/categories");
+        return "redirect:/admin/categories";
     }
 
-    @PostMapping("/save")
-    public ModelAndView save(Model model, @ModelAttribute("category") Category category) {
+    @PostMapping("save")
+    public String save(Model model, 
+                       @Valid @ModelAttribute("category") Category category,
+                       BindingResult result, 
+                       @RequestParam("imageFile") MultipartFile file) {
+        
+        if (result.hasErrors()) {
+            // Logic xác định Edit/Add dựa vào ID
+            boolean isEdit = category.getId() != null && category.getId() > 0;
+            model.addAttribute("isEdit", isEdit);
+            return "admin/categories/addOrEdit";
+        }
+
+        try {
+            if (!file.isEmpty()) {
+                File uploadDir = new File(Constant.UPLOAD_DIRECTORY);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+
+                String originalFilename = file.getOriginalFilename();
+                String fileName = UUID.randomUUID().toString() + "_" + originalFilename;
+
+                Path filePath = Paths.get(Constant.UPLOAD_DIRECTORY, fileName);
+                Files.write(filePath, file.getBytes());
+
+                category.setImages(fileName);
+            } else {
+                if (category.getId() != null) {
+                    Category oldCategory = categoryService.findById(category.getId()).orElse(null);
+                    if (oldCategory != null) {
+                        category.setImages(oldCategory.getImages());
+                        
+                        // Giữ lại User cũ nếu form không gửi lên
+                        if (category.getUser() == null) {
+                             category.setUser(oldCategory.getUser());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("message", "Upload failed: " + e.getMessage());
+            
+            // Gửi lại isEdit khi có lỗi Exception
+            boolean isEdit = category.getId() != null && category.getId() > 0;
+            model.addAttribute("isEdit", isEdit);
+            
+            return "admin/categories/addOrEdit";
+        }
+        
         categoryService.save(category);
-        return new ModelAndView("forward:/admin/categories");
+        return "redirect:/admin/categories";
     }
 
-    @GetMapping("/delete/{id}")
-    public ModelAndView delete(Model model, @PathVariable("id") Integer id) {
-        categoryService.deleteById(id);
-        return new ModelAndView("forward:/admin/categories");
-    }
-    
-    @ModelAttribute("users")
-    public List<User> getUsers() {
-        return userService.findAll();
+    @GetMapping("delete/{id}")
+    public String delete(Model model, @PathVariable("id") Integer id) {
+        try {
+            categoryService.deleteById(id);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/admin/categories";
     }
 }
