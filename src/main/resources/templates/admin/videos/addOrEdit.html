@@ -1,10 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <title th:text="${isEdit ? 'Cập nhật Video' : 'Thêm Video Mới'}"></title>
 </head>
 <body>
+<div layout:fragment="content">
+    <div class="card shadow border-0" style="max-width: 900px; margin: 20px auto;">
+        <div class="card-header bg-primary text-white">
+            <h5 class="m-0 fw-bold">
+                <i class="fas" th:classappend="${isEdit} ? 'fa-edit' : 'fa-plus-circle'"></i>
+                <span th:text="${isEdit ? 'Cập nhật Video' : 'Thêm Video Mới'}"></span>
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <form th:action="@{/admin/videos/save}" method="post" 
+                  enctype="multipart/form-data" th:object="${video}">
+                
+                <input type="hidden" th:field="*{id}" />
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        
+                        <div class="mb-3" th:if="${isEdit}">
+                            <label class="form-label fw-bold text-secondary">Video ID:</label>
+                            <input type="text" class="form-control bg-light" th:value="*{id}" readonly />
+                        </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tiêu đề Video <span class="text-danger">*</span>:</label>
+                            <input type="text" th:field="*{title}" class="form-control" 
+                                   placeholder="Nhập tiêu đề video..." required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả nội dung:</label>
+                            <textarea th:field="*{description}" class="form-control" rows="5" 
+                                      placeholder="Nhập tóm tắt nội dung video..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Lượt xem:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-eye"></i></span>
+                                    <input type="number" th:field="*{views}" class="form-control" min="0" value="0"/>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Trạng thái:</label>
+                                <select th:field="*{active}" class="form-select">
+                                    <option value="true">Công khai (Hoạt động)</option>
+                                    <option value="false">Riêng tư (Khóa)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Danh mục <span class="text-danger">*</span>:</label>
+                            <select th:field="*{category}" class="form-select" required size="5">
+                                <option value="" disabled>-- Chọn danh mục --</option>
+                                <option th:each="c : ${categories}" 
+                                        th:value="${c.id}" 
+                                        th:text="${c.name}">
+                                </option>
+                            </select>
+                            <div class="form-text text-muted small">
+                                <i class="fas fa-info-circle"></i> Chọn danh mục phù hợp.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Poster (Ảnh bìa):</label>
+                            <input type="file" name="imageFile" class="form-control" accept="image/*"/>
+                            
+                            <div class="card mt-3 bg-light border-0">
+                                <div class="card-body text-center">
+                                    <p class="card-text small text-muted mb-2">Xem trước</p>
+                                    
+                                    <img th:if="${video.poster != null}" 
+                                         th:src="@{/image(fname=${video.poster})}" 
+                                         class="img-fluid rounded shadow-sm border" 
+                                         style="max-height: 200px;" alt="Poster Preview"/>
+                                    
+                                    <div th:unless="${video.poster != null}" 
+                                         class="text-muted border rounded p-4 bg-white d-inline-block">
+                                        <i class="fas fa-image fa-3x mb-2"></i>
+                                        <br>No Image
+                                    </div>
+
+                                    <input type="hidden" th:field="*{poster}" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-top pt-3 mt-3 d-flex justify-content-end gap-2">
+                    <a th:href="@{/admin/videos}" class="btn btn-secondary px-4">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fas fa-save me-1"></i> Lưu lại
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
 </body>
 </html>
