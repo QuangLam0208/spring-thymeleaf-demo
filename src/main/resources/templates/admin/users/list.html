@@ -1,10 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <title>Quản lý Người dùng</title>
 </head>
 <body>
+<div layout:fragment="content">
+    <div class="container-fluid px-4 mt-4">
 
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0 fw-bold text-primary"><i class="fas fa-users me-2"></i>Quản lý Người dùng</h2>
+                <p class="text-muted mb-0">Danh sách tài khoản quản trị và thành viên</p>
+            </div>
+            <a th:href="@{/admin/users/add}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-user-plus me-2"></i>Thêm thành viên
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4 bg-light">
+            <div class="card-body py-3">
+                <form th:action="@{/admin/users}" method="get" class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label class="fw-bold text-secondary">Tìm kiếm:</label>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" name="username" 
+                                   th:value="${username}" placeholder="Nhập username...">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-dark">Tìm kiếm</button>
+                        <a th:href="@{/admin/users}" class="btn btn-outline-secondary" title="Làm mới">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0">
+                        <thead class="bg-dark text-white text-uppercase small">
+                            <tr>
+                                <th class="py-3 px-4">ID</th>
+                                <th class="py-3">Username</th>
+                                <th class="py-3">Email</th>
+                                <th class="py-3">Số điện thoại</th>
+                                <th class="py-3 text-center">Vai trò</th>
+                                <th class="py-3 text-center">Trạng thái</th>
+                                <th class="py-3 text-end px-4">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${userPage.content}">
+                                <td class="px-4 fw-bold text-muted" th:text="${user.id}"></td>
+                                
+                                <td class="fw-bold text-primary" th:text="${user.username}"></td>
+                                
+                                <td th:text="${user.email}"></td>
+                                
+                                <td th:text="${user.phone}"></td>
+                                
+                                <td class="text-center">
+                                    <span th:if="${user.role == 1}" class="badge bg-secondary">User</span>
+                                    <span th:if="${user.role == 2}" class="badge bg-info text-dark">Manager</span>
+                                    <span th:if="${user.role == 3}" class="badge bg-danger">Admin</span>
+                                </td>
+                                
+                                <td class="text-center">
+                                    <span th:if="${user.active}" class="badge rounded-pill bg-success bg-opacity-75">
+                                        <i class="fas fa-check-circle me-1"></i>Active
+                                    </span>
+                                    <span th:unless="${user.active}" class="badge rounded-pill bg-secondary bg-opacity-75">
+                                        <i class="fas fa-ban me-1"></i>Inactive
+                                    </span>
+                                </td>
+
+                                <td class="text-end px-4">
+                                    <a th:href="@{'/admin/users/edit/' + ${user.id}}" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <a th:href="@{'/admin/users/delete/' + ${user.id}}" 
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa user này?');" 
+                                       class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-muted small">
+                         Hiển thị trang [[${userPage.number + 1}]] của [[${userPage.totalPages}]]
+                    </div>
+                    <div class="col-md-6" th:if="${userPage.totalPages > 1}">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end mb-0 pagination-sm">
+                                <li class="page-item" th:classappend="${userPage.first} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/users(username=${username}, page=${userPage.number})}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item" th:each="pageNumber : ${pageNumbers}" 
+                                    th:classappend="${pageNumber == userPage.number + 1} ? 'active'">
+                                    <a class="page-link" th:href="@{/admin/users(username=${username}, page=${pageNumber})}" 
+                                       th:text="${pageNumber}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${userPage.last} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/users(username=${username}, page=${userPage.number + 2})}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
