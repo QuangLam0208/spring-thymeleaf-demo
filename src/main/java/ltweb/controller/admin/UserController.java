@@ -84,21 +84,11 @@ public class UserController {
     }
 
     @PostMapping("save")
-    public String save(Model model, 
-                       @Valid @ModelAttribute("user") User user, 
-                       BindingResult result, 
-                       RedirectAttributes redirectAttributes) {
-        
+    public String save(Model model, @Valid @ModelAttribute("user") User user, BindingResult result) { 
         if (result.hasErrors()) {
-            boolean isEdit = user.getId() != null && user.getId() > 0;
-            model.addAttribute("isEdit", isEdit);
             return "admin/users/addOrEdit";
         }
-        
         userService.save(user);
-        
-        redirectAttributes.addFlashAttribute("message", "Lưu người dùng thành công!");
-        
         return "redirect:/admin/users";
     }
 

@@ -1,7 +1,11 @@
 package ltweb.controller.admin;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -18,12 +22,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import ltweb.entity.Category;
 import ltweb.entity.Video;
 import ltweb.service.CategoryService;
 import ltweb.service.VideoService;
+import ltweb.util.Constant;
 
 @Controller
 @RequestMapping("/admin/videos")
@@ -66,29 +73,61 @@ public class VideoController {
         return "admin/videos/list";
     }
 
-    @GetMapping("/add")
-    public String add(Model model) {
-        Video video = new Video();
-        model.addAttribute("video", video);
+    @GetMapping("add")
+    public String add(Model model, RedirectAttributes redirectAttributes) {
+        List<Category> categories = categoryService.findAll();
+        
+        if (categories == null || categories.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "Hệ thống chưa có Danh mục nào. Vui lòng tạo Danh mục trước khi thêm Video!");
+            return "redirect:/admin/categories";
+        }
+
+        model.addAttribute("video", new Video());
+        model.addAttribute("categories", categories);
         model.addAttribute("isEdit", false);
         return "admin/videos/addOrEdit";
     }
 
-    @GetMapping("/edit/{id}")
-    public ModelAndView edit(Model model, @PathVariable("id") Integer id) {
+    @GetMapping("edit/{id}")
+    public String edit(Model model, @PathVariable("id") Integer id) {
         Video video = videoService.findById(id);
         if (video != null) {
-            model.addAttribute("video", video);
+        	model.addAttribute("video", video);
+            model.addAttribute("categories", categoryService.findAll());
             model.addAttribute("isEdit", true);
-            return new ModelAndView("admin/videos/addOrEdit");
+            return "admin/videos/addOrEdit";
         }
-        return new ModelAndView("forward:/admin/videos");
+        return "redirect:/admin/videos";
     }
 
-    @PostMapping("/save")
-    public ModelAndView save(Model model, @ModelAttribute("video") Video video) {
+    @PostMapping("save")
+    public String save(Model model, @ModelAttribute("video") Video video,
+                       @RequestParam("imageFile") MultipartFile file) {
+        
+        // Xử lý upload ảnh 
+        if (!file.isEmpty()) {
+            try {
+                File uploadDir = new File(Constant.UPLOAD_DIRECTORY);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+                
+                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                
+                Files.write(Paths.get(Constant.UPLOAD_DIRECTORY, fileName), file.getBytes());
+                
+                video.setPoster(fileName);
+            } catch (Exception e) { 
+                e.printStackTrace(); 
+            }
+        } else {
+            // Giữ ảnh cũ nếu đang edit
+            if (video.getId() != null) {
+                Video old = videoService.findById(video.getId());
+                if (old != null) video.setPoster(old.getPoster());
+            }
+        }
+        
         videoService.save(video);
-        return new ModelAndView("forward:/admin/videos");
+        return "redirect:/admin/videos";
     }
 
     @GetMapping("/delete/{id}")
