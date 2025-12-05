@@ -40,6 +40,11 @@ public class VideoController {
 
     @Autowired
     private CategoryService categoryService;
+    
+    @GetMapping("/ajax")
+    public String listAjax() {
+        return "admin/videos/list_ajax";
+    }
 
     @GetMapping("")
     public String list(Model model,
