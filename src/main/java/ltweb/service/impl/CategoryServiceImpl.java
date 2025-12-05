@@ -25,22 +25,37 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public <S extends Category> S save(S entity) {
-        if (entity.getId() == 0) {
+        // Kiểm tra null trước tiên vì id là Integer
+        if (entity.getId() == null || entity.getId() == 0) {
             return categoryRepository.save(entity);
         } else {
-            // Trường hợp Cập nhật (Edit)
+            // Logic cập nhật (Edit)
             Optional<Category> opt = findById(entity.getId());
             if (opt.isPresent()) {
                 Category oldCategory = opt.get();
-
+                
+                // Giữ lại tên cũ nếu không gửi lên
                 if (!StringUtils.hasText(entity.getName())) {
                     entity.setName(oldCategory.getName());
                 }
-
+                
+                // Giữ lại ảnh cũ nếu không gửi lên
                 if (!StringUtils.hasText(entity.getImages())) {
                     entity.setImages(oldCategory.getImages());
                 }
                 
+                // Giữ lại User cũ nếu bị null (tránh mất quan hệ)
+                if (entity.getUser() == null) {
+                    entity.setUser(oldCategory.getUser());
+                }
+                
+                // Giữ lại Code cũ
+                if (!StringUtils.hasText(entity.getCode())) {
+                    entity.setCode(oldCategory.getCode());
+                }
+                
+                // Giữ lại trạng thái cũ (tuỳ chọn, vì boolean mặc định là false)
+                // entity.setStatus(oldCategory.isStatus());
             }
             return categoryRepository.save(entity);
         }
