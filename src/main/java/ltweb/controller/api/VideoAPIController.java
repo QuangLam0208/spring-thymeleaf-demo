@@ -56,6 +56,16 @@ public class VideoAPIController {
         );
     }
 	
+	// API lấy chi tiết Video theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Response> getVideoById(@PathVariable("id") Integer id) {
+        Video video = videoService.findById(id);
+        if (video != null) {
+            return new ResponseEntity<>(new Response(true, "Thành công", video), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new Response(false, "Thất bại", null), HttpStatus.NOT_FOUND);
+    }
+	
 	public ResponseEntity<Response> addVideo(@RequestBody Video video) {
 		try {
 			if (video.getCategory() != null && video.getCategory().getId() != null) {
