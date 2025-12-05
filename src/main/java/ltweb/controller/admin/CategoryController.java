@@ -43,6 +43,11 @@ public class CategoryController {
 
     @Autowired
     private UserService userService;
+    
+    @GetMapping("/ajax")
+    public String listAjax() {
+        return "admin/categories/list_ajax";
+    }
 
     @ModelAttribute("users")
     public List<User> getUsers() {

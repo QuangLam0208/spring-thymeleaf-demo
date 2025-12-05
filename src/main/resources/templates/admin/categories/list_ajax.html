@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head>
+    <title>Quản lý Danh mục (AJAX)</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid px-4 mt-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary fw-bold">Quản lý Danh mục (AJAX)</h2>
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus me-2"></i>Thêm mới
+            </button>
+        </div>
+
+        <div class="card shadow border-0">
+            <div class="card-body">
+                <table class="table table-hover table-striped" id="categoryTable">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Danh mục</th>
+                            <th>Mã Code</th>
+                            <th>Trạng thái</th>
+                            <th>Hình ảnh</th> <th class="text-end">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Thông tin Danh mục</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="categoryId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tên Danh mục:</label>
+                            <input type="text" class="form-control" id="categoryName" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Mã Code:</label>
+                            <input type="text" class="form-control" id="categoryCode">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tên file ảnh (String):</label>
+                            <input type="text" class="form-control" id="categoryImage" placeholder="Ví dụ: default.jpg">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái:</label>
+                            <select class="form-select" id="categoryStatus">
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Khóa</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">Lưu lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Lấy đường dẫn gốc của ứng dụng (nếu có context path)
+        var contextPath = /*[[@{/}]]*/ ''; 
+        // Đảm bảo không bị double slash //
+        if(contextPath.endsWith('/')) contextPath = contextPath.slice(0, -1);
+        
+        var apiUrl = contextPath + '/v1/api/category'; // URL từ CategoryAPIController
+
+        $(document).ready(function() {
+            loadCategories();
+        });
+
+        // 1. Hàm load danh sách (GET)
+        function loadCategories() {
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    // API của bạn trả về đối tượng Response: { status: true, message: "...", body: [...] }
+                    if (response.status) {
+                        renderTable(response.body);
+                    } else {
+                        alert("Lỗi tải dữ liệu: " + response.message);
+                    }
+                },
+                error: function(err) {
+                    console.log(err);
+                    alert("Không thể gọi API!");
+                }
+            });
+        }
+
+        // Hàm vẽ bảng
+        function renderTable(data) {
+            var tbody = $('#categoryTable tbody');
+            tbody.empty(); // Xóa dữ liệu cũ
+
+            $.each(data, function(index, item) {
+                var statusLabel = item.status ? 
+                    '<span class="badge bg-success">Active</span>' : 
+                    '<span class="badge bg-danger">Inactive</span>';
+                
+                var row = `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.code ? item.code : ''}</td>
+                    <td>${statusLabel}</td>
+                    <td>${item.images ? item.images : ''}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-warning me-2" onclick="showEditModal(${item.id})">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.append(row);
+            });
+        }
+
+        // 2. Mở modal thêm mới
+        function showAddModal() {
+            $('#modalTitle').text('Thêm mới Danh mục');
+            $('#categoryForm')[0].reset(); // Reset form
+            $('#categoryId').val(''); // Xóa ID
+            $('#categoryImage').val('default.jpg'); // Giá trị mặc định
+            var myModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            myModal.show();
+        }
+
+        function showEditModal(id) {
+            $('#modalTitle').text('Cập nhật Danh mục');
+            
+            var row = $(`button[onclick="showEditModal(${id})"]`).closest('tr');
+            var name = row.find('td:eq(1)').text();
+            var code = row.find('td:eq(2)').text();
+            var statusText = row.find('td:eq(3)').text(); // Active/Inactive
+            var image = row.find('td:eq(4)').text();
+
+            $('#categoryId').val(id);
+            $('#categoryName').val(name);
+            $('#categoryCode').val(code);
+            $('#categoryImage').val(image);
+            $('#categoryStatus').val(statusText.includes('Active') ? 'true' : 'false');
+
+            var myModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            myModal.show();
+        }
+
+        // 4. Lưu dữ liệu (Xử lý cả Thêm và Sửa)
+        function saveCategory() {
+            var id = $('#categoryId').val();
+            var data = {
+                name: $('#categoryName').val(),
+                code: $('#categoryCode').val(),
+                images: $('#categoryImage').val(),
+                status: $('#categoryStatus').val() === 'true'
+            };
+
+            var method = 'POST';
+            var url = apiUrl + '/save';
+
+            if (id) {
+                // Nếu có ID là chức năng Sửa (PUT)
+                method = 'PUT';
+                url = apiUrl + '/update/' + id;
+                // API PUT của bạn yêu cầu body JSON, không cần ID trong body (nhưng có cũng ko sao)
+            }
+
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json', // Quan trọng: Gửi JSON
+                data: JSON.stringify(data),      // Chuyển object JS sang JSON string
+                success: function(response) {
+                    if (response.status) {
+                        alert(response.message);
+                        // Đóng modal
+                        var modalEl = document.getElementById('categoryModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+                        
+                        // Load lại bảng
+                        loadCategories();
+                    } else {
+                        alert("Thất bại: " + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    alert("Lỗi hệ thống: " + xhr.status);
+                }
+            });
+        }
+
+        // 5. Xóa danh mục
+        function deleteCategory(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
+                $.ajax({
+                    url: apiUrl + '/delete/' + id,
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.status) {
+                            alert(response.message);
+                            loadCategories();
+                        } else {
+                            alert("Không thể xóa: " + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        alert("Lỗi khi xóa!");
+                    }
+                });
+            }
+        }
+    </script>
+</div>
+</body>
+</html>
